@@ -367,9 +367,15 @@ for await (const event of client.streamTTS({
 }
 ```
 
-WebSocket API:
+Node.js WebSocket API:
 
 ```ts
+import { KovaTTSClient } from "@kova/tts";
+
+const client = new KovaTTSClient({
+  apiKey: process.env.KOVA_API_KEY!,
+});
+
 const ws = await client.connectWebSocket();
 
 await ws.startContext({
@@ -384,9 +390,21 @@ await ws.sendText("ctx-1", "world.");
 await ws.flush("ctx-1");
 
 for await (const frame of ws) {
-  // frame is one of the server-to-client frame types.
+  if ("audio" in frame) {
+    // Decoded little-endian int16 PCM bytes at 32 kHz mono.
+    const pcmBytes = frame.audio;
+    console.log(`received ${pcmBytes.byteLength} PCM bytes`);
+  } else if ("timestamps" in frame) {
+    console.log(frame.timestamps.words);
+  } else if ("flush_completed" in frame) {
+    break;
+  }
 }
 ```
+
+The Node.js WebSocket client sends `x-api-key` as a handshake header. Browser
+`WebSocket` does not reliably support custom headers, so this helper is intended
+for Node runtimes.
 
 Implementation notes:
 
