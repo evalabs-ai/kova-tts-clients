@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kova-tts"
+version = "0.1.0"
+description = "Official Python client for the Kova TTS API."
+readme = "packages/python/README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+  "httpx>=0.26.0",
+  "websockets>=12.0"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.23.0"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["packages/python/src/kova_tts"]
+
+[tool.pytest.ini_options]
+testpaths = ["packages/python/tests"]
+pythonpath = ["packages/python/src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

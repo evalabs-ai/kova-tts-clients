@@ -1,0 +1,31 @@
+{
+  "name": "@kova/tts",
+  "version": "0.1.0",
+  "description": "Official JavaScript/TypeScript client for the Kova TTS API.",
+  "type": "module",
+  "main": "./packages/js/dist/index.js",
+  "types": "./packages/js/dist/index.d.ts",
+  "files": [
+    "packages/js/dist",
+    "packages/js/README.md",
+    "README.md",
+    "protocol"
+  ],
+  "scripts": {
+    "build": "tsc -p packages/js/tsconfig.json",
+    "prepare": "npm run build",
+    "test": "npm run build && node --test packages/js/test/*.test.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.12",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,31 @@
+# kova-tts
+
+Python client for the Kova TTS API.
+
+Install directly from GitHub before PyPI publishing:
+
+```sh
+pip install git+https://github.com/OWNER/kova-tts-clients.git
+```
+
+```py
+from kova_tts import KovaTTSClient
+
+client = KovaTTSClient(
+    api_key="YOUR_API_KEY",
+)
+
+result = client.tts(
+    text="Hello world.",
+    voice="leon",
+    response_format="mp3",
+    timestamps=True,
+)
+
+client.write_audio_file(result.audio, "out.mp3")
+```
+
+The default endpoint is `https://api.evalabs.ai/v1/tts`. Override `base_url`
+only for staging or local servers.
+
+Streaming and WebSocket APIs are async.

@@ -1,0 +1,28 @@
+[
+  {
+    "start_context": {
+      "voice_id": "leon",
+      "model_id": "default",
+      "timestamps": true
+    },
+    "context_id": "ctx-1"
+  },
+  {
+    "send_text": "Hello",
+    "context_id": "ctx-1"
+  },
+  {
+    "flush": true,
+    "context_id": "ctx-1",
+    "flush_id": "flush-1"
+  },
+  {
+    "close_context": true,
+    "context_id": "ctx-1"
+  },
+  {
+    "audio_chunk": "AAECAw==",
+    "context_id": "ctx-1",
+    "chunk_id": "chunk-1"
+  }
+]
