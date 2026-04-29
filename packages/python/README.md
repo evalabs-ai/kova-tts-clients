@@ -5,7 +5,7 @@ Python client for the Kova TTS API.
 Install directly from GitHub before PyPI publishing:
 
 ```sh
-pip install git+https://github.com/OWNER/kova-tts-clients.git
+pip install git+https://github.com/evalabs-ai/kova-tts-clients.git
 ```
 
 ```py

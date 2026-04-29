@@ -10,18 +10,18 @@ Use a single monorepo so both clients share one API contract, examples, fixtures
 ## Install From GitHub
 
 Both package managers can install directly from the root of this repository.
-Replace `OWNER/kova-tts-clients` with the actual GitHub repo path.
+Replace `evalabs-ai/kova-tts-clients` with the actual GitHub repo path.
 
 Python:
 
 ```sh
-pip install git+https://github.com/OWNER/kova-tts-clients.git
+pip install git+https://github.com/evalabs-ai/kova-tts-clients.git
 ```
 
 JavaScript:
 
 ```sh
-npm install git+https://github.com/OWNER/kova-tts-clients.git
+npm install git+https://github.com/evalabs-ai/kova-tts-clients.git
 ```
 
 The root `pyproject.toml` packages the Python client from
