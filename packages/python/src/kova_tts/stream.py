@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import AsyncIterator
 
+from .audio import decode_base64_bytes
 from .errors import KovaTTSProtocolError
 from .types import StreamAudioEvent, StreamEvent, StreamTimestampsEvent
 
@@ -12,7 +13,10 @@ def parse_stream_event(value: object) -> StreamEvent:
         raise KovaTTSProtocolError("Stream event must be an object")
 
     if value.get("type") == "audio" and isinstance(value.get("audio_chunk"), str):
-        return StreamAudioEvent(type="audio", audio_chunk=value["audio_chunk"])
+        return StreamAudioEvent(
+            type="audio",
+            audio=decode_base64_bytes(value["audio_chunk"]),
+        )
 
     if value.get("type") == "timestamps":
         words = value.get("words")

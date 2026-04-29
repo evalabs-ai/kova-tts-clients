@@ -64,7 +64,8 @@ def test_parse_sync_response_with_timestamps() -> None:
         }
     )
 
-    assert parsed.audio == "AAE="
+    assert parsed.audio == b"\x00\x01"
+    assert not hasattr(parsed, "audio_bytes")
     assert parsed.timestamps is not None
     assert parsed.timestamps.words == ["hello"]
 
@@ -72,7 +73,7 @@ def test_parse_sync_response_with_timestamps() -> None:
 def test_parse_sync_response_without_timestamps() -> None:
     parsed = parse_sync_response({"audio": "AAE="})
 
-    assert parsed.audio == "AAE="
+    assert parsed.audio == b"\x00\x01"
     assert parsed.timestamps is None
 
 

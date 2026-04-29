@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+import { decodeBase64ToBytes } from "./audio.js";
 import { KovaTTSConnectionError, KovaTTSProtocolError } from "./errors.js";
 import type {
   ClientWebSocketFrame,
@@ -67,7 +68,11 @@ export function parseWebSocketFrame(value: unknown): ServerWebSocketFrame {
     return frame as ServerWebSocketFrame;
   }
   if (typeof frame.audio_chunk === "string") {
-    return frame as ServerWebSocketFrame;
+    return {
+      audio: decodeBase64ToBytes(frame.audio_chunk),
+      ...(frame.context_id !== undefined ? { context_id: frame.context_id } : {}),
+      ...(frame.chunk_id !== undefined ? { chunk_id: frame.chunk_id } : {}),
+    } as ServerWebSocketFrame;
   }
   if (frame.timestamps && typeof frame.timestamps === "object") {
     return frame as ServerWebSocketFrame;

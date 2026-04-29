@@ -62,15 +62,17 @@ test("parses sync responses", () => {
     },
   });
 
-  assert.equal(parsed.audio, "AAE=");
+  assert.deepEqual([...parsed.audio], [0, 1]);
+  assert.equal("audioBytes" in parsed, false);
   assert.deepEqual(parsed.timestamps.words, ["hello"]);
 });
 
 test("parses SSE stream records", () => {
-  assert.deepEqual(parseSseRecord('data: {"type":"audio","audio_chunk":"AAE="}'), {
-    type: "audio",
-    audio_chunk: "AAE=",
-  });
+  const audio = parseSseRecord('data: {"type":"audio","audio_chunk":"AAE="}');
+  assert.equal(audio.type, "audio");
+  assert.deepEqual([...audio.audio], [0, 1]);
+  assert.equal("audio_chunk" in audio, false);
+
   assert.deepEqual(
     parseSseRecord(
       'data: {"type":"timestamps","words":["hello"],"start_seconds":[0],"end_seconds":[0.3]}',
@@ -136,7 +138,10 @@ test("parses websocket server frames", () => {
       }),
     true,
   );
-  assert.equal("audio_chunk" in parseWebSocketFrame({ audio_chunk: "AAE=" }), true);
+  const audio = parseWebSocketFrame({ audio_chunk: "AAE=" });
+  assert.equal("audio" in audio, true);
+  assert.deepEqual([...audio.audio], [0, 1]);
+  assert.equal("audio_chunk" in audio, false);
   assert.equal(
     "timestamps" in
       parseWebSocketFrame({

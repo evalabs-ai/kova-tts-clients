@@ -72,6 +72,14 @@ def test_parse_websocket_frames(frame: dict[str, object], class_name: str) -> No
     assert parse_websocket_frame(frame).__class__.__name__ == class_name
 
 
+def test_parse_websocket_audio_frame_decodes_pcm() -> None:
+    frame = parse_websocket_frame({"audio_chunk": "AAE=", "context_id": "ctx-1"})
+
+    assert frame.__class__.__name__ == "AudioChunk"
+    assert frame.audio == b"\x00\x01"
+    assert not hasattr(frame, "audio_chunk")
+
+
 def test_parse_websocket_rejects_unknown_shape() -> None:
     with pytest.raises(KovaTTSProtocolError):
         parse_websocket_frame({"unknown": True})

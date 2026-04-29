@@ -15,13 +15,15 @@ export type TTSTimestamps = {
 };
 
 export type SyncTTSResponse = {
-  audio: string;
+  /** Decoded audio file bytes. Format follows the request response_format. */
+  audio: Uint8Array;
   timestamps?: TTSTimestamps;
 };
 
 export type StreamAudioEvent = {
   type: "audio";
-  audio_chunk: string;
+  /** Decoded little-endian int16 PCM bytes at 32 kHz mono. */
+  audio: Uint8Array;
 };
 
 export type StreamTimestampsEvent = TTSTimestamps & {
@@ -67,7 +69,8 @@ export type ContextStarted = {
 };
 
 export type AudioChunk = {
-  audio_chunk: string;
+  /** Decoded little-endian int16 PCM bytes at 32 kHz mono. */
+  audio: Uint8Array;
   context_id?: string | null;
   chunk_id?: string | null;
 };

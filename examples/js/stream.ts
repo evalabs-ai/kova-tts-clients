@@ -10,8 +10,7 @@ for await (const event of client.streamTTS({
   timestamps: true,
 })) {
   if (event.type === "audio") {
-    const pcm = client.decodePcmChunk(event.audio_chunk);
-    console.log(`received ${pcm.length} PCM samples`);
+    console.log(`received ${event.audio.byteLength} PCM bytes`);
   } else {
     console.log(event.words.join(" "));
   }

@@ -1,4 +1,5 @@
 import { KovaTTSProtocolError } from "./errors.js";
+import { decodeBase64ToBytes } from "./audio.js";
 import type { StreamEvent } from "./types.js";
 
 export function parseStreamEvent(value: unknown): StreamEvent {
@@ -8,7 +9,10 @@ export function parseStreamEvent(value: unknown): StreamEvent {
 
   const event = value as Record<string, unknown>;
   if (event.type === "audio" && typeof event.audio_chunk === "string") {
-    return { type: "audio", audio_chunk: event.audio_chunk };
+    return {
+      type: "audio",
+      audio: decodeBase64ToBytes(event.audio_chunk),
+    };
   }
 
   if (

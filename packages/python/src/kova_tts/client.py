@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import base64
-import struct
 from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse, urlunparse
 
+from .audio import decode_base64_bytes, decode_pcm16le_base64
 from .errors import KovaTTSConnectionError, KovaTTSProtocolError, error_for_status
 from .stream import parse_event_stream
 from .types import ResponseFormat, StreamEvent, SyncTTSResponse, TTSTimestamps, TTSRequest
@@ -104,7 +103,7 @@ class KovaTTSClient:
         scheme = "wss" if parsed.scheme == "https" else "ws"
         return KovaTTSWebSocket(urlunparse(parsed._replace(scheme=scheme)), self.api_key)
 
-    def write_audio_file(self, audio: str, path: str | Path) -> None:
+    def write_audio_file(self, audio: bytes, path: str | Path) -> None:
         write_audio_file(audio, path)
 
     @staticmethod
@@ -158,24 +157,13 @@ def parse_sync_response(value: object) -> SyncTTSResponse:
         raise KovaTTSProtocolError("Sync TTS response is missing audio")
     timestamps = value.get("timestamps")
     return SyncTTSResponse(
-        audio=audio,
+        audio=decode_base64_bytes(audio),
         timestamps=_parse_timestamps(timestamps) if timestamps is not None else None,
     )
 
 
-def decode_base64_bytes(value: str) -> bytes:
-    return base64.b64decode(value)
-
-
-def decode_pcm16le_base64(value: str) -> list[int]:
-    data = decode_base64_bytes(value)
-    if len(data) % 2:
-        raise KovaTTSProtocolError("PCM16 data must have an even byte length")
-    return list(struct.unpack(f"<{len(data) // 2}h", data))
-
-
-def write_audio_file(audio: str, path: str | Path) -> None:
-    Path(path).write_bytes(decode_base64_bytes(audio))
+def write_audio_file(audio: bytes, path: str | Path) -> None:
+    Path(path).write_bytes(audio)
 
 
 def _parse_timestamps(value: object) -> TTSTimestamps:

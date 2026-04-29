@@ -25,6 +25,9 @@ result = client.tts(
 client.write_audio_file(result.audio, "out.mp3")
 ```
 
+`result.audio` is decoded file bytes as `bytes`. Streaming and WebSocket audio
+events expose decoded PCM bytes on `event.audio` / `frame.audio`.
+
 The default endpoint is `https://api.evalabs.ai/v1/tts`. Override `base_url`
 only for staging or local servers.
 

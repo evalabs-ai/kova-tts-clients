@@ -75,6 +75,10 @@ client.write_audio_file(result.audio, "out.mp3")
 print(result.timestamps.words if result.timestamps else None)
 ```
 
+Client responses decode audio before returning it. Sync `result.audio` is the
+decoded audio file bytes. Streaming and WebSocket audio frames expose `audio` as
+decoded PCM bytes.
+
 Direct curl smoke test:
 
 ```sh
@@ -358,7 +362,7 @@ for await (const event of client.streamTTS({
   timestamps: true,
 })) {
   if (event.type === "audio") {
-    const pcm = client.decodePcmChunk(event.audio_chunk);
+    const pcmBytes = event.audio;
   }
 }
 ```
@@ -432,7 +436,7 @@ async for event in client.stream_tts(
     timestamps=True,
 ):
     if event.type == "audio":
-        pcm = event.decode_pcm()
+        pcm_bytes = event.audio
 ```
 
 WebSocket API:

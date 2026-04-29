@@ -10,7 +10,8 @@ def test_parse_sse_audio_record() -> None:
 
     assert event is not None
     assert event.type == "audio"
-    assert event.audio_chunk == "AAE="
+    assert event.audio == b"\x00\x01"
+    assert not hasattr(event, "audio_chunk")
 
 
 def test_parse_sse_timestamps_record() -> None:
@@ -34,3 +35,4 @@ async def test_parse_event_stream_ignores_blank_separators() -> None:
     events = [event async for event in parse_event_stream(lines())]
 
     assert [event.type for event in events] == ["audio", "timestamps"]
+    assert events[0].audio == b"\x00\x01"

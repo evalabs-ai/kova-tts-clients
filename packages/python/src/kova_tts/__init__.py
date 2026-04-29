@@ -1,8 +1,7 @@
+from .audio import decode_base64_bytes, decode_pcm16le_base64
 from .client import (
     DEFAULT_BASE_URL,
     KovaTTSClient,
-    decode_base64_bytes,
-    decode_pcm16le_base64,
     write_audio_file,
 )
 from .errors import (

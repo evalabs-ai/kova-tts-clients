@@ -5,6 +5,7 @@ from dataclasses import asdict
 from types import TracebackType
 from typing import Any
 
+from .audio import decode_base64_bytes
 from .errors import KovaTTSConnectionError, KovaTTSProtocolError
 from .types import (
     AudioChunk,
@@ -92,7 +93,7 @@ def parse_websocket_frame(value: object) -> WebSocketFrame:
 
     if isinstance(value.get("audio_chunk"), str):
         return AudioChunk(
-            audio_chunk=value["audio_chunk"],
+            audio=decode_base64_bytes(value["audio_chunk"]),
             context_id=value.get("context_id"),
             chunk_id=value.get("chunk_id"),
         )

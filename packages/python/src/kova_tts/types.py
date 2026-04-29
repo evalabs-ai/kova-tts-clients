@@ -24,19 +24,14 @@ class TTSTimestamps:
 
 @dataclass(slots=True)
 class SyncTTSResponse:
-    audio: str
+    audio: bytes
     timestamps: TTSTimestamps | None = None
 
 
 @dataclass(slots=True)
 class StreamAudioEvent:
     type: Literal["audio"]
-    audio_chunk: str
-
-    def decode_pcm(self) -> list[int]:
-        from .client import decode_pcm16le_base64
-
-        return decode_pcm16le_base64(self.audio_chunk)
+    audio: bytes
 
 
 @dataclass(slots=True)
@@ -66,14 +61,9 @@ class ContextStarted:
 
 @dataclass(slots=True)
 class AudioChunk:
-    audio_chunk: str
+    audio: bytes
     context_id: str | None = None
     chunk_id: str | None = None
-
-    def decode_pcm(self) -> list[int]:
-        from .client import decode_pcm16le_base64
-
-        return decode_pcm16le_base64(self.audio_chunk)
 
 
 @dataclass(slots=True)

@@ -15,7 +15,7 @@ async def main() -> None:
         timestamps=True,
     ):
         if event.type == "audio":
-            print(f"received {len(event.decode_pcm())} PCM samples")
+            print(f"received {len(event.audio)} PCM bytes")
         else:
             print(" ".join(event.words))
 

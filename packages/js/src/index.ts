@@ -1,3 +1,4 @@
+export * from "./audio.js";
 export * from "./client.js";
 export * from "./errors.js";
 export * from "./stream.js";

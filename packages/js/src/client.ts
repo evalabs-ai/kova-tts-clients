@@ -3,6 +3,7 @@ import {
   KovaTTSProtocolError,
   errorForStatus,
 } from "./errors.js";
+import { decodeBase64ToBytes } from "./audio.js";
 import { parseEventStream } from "./stream.js";
 import type { StreamEvent, SyncTTSResponse, TTSRequest } from "./types.js";
 import { KovaTTSWebSocket } from "./websocket.js";
@@ -50,13 +51,9 @@ export class KovaTTSClient {
     return decodeBase64ToBytes(value);
   }
 
-  decodePcmChunk(value: string): Int16Array {
-    return decodePcm16LeBase64(value);
-  }
-
-  async writeAudioFile(audio: string, path: string): Promise<void> {
+  async writeAudioFile(audio: Uint8Array, path: string): Promise<void> {
     const { writeFile } = await import("node:fs/promises");
-    await writeFile(path, decodeBase64ToBytes(audio));
+    await writeFile(path, audio);
   }
 
   private async postJson(path: string, request: TTSRequest): Promise<Response> {
@@ -95,32 +92,17 @@ export function parseSyncResponse(value: unknown): SyncTTSResponse {
   if (!value || typeof value !== "object") {
     throw new KovaTTSProtocolError("Sync TTS response must be an object");
   }
-  const response = value as SyncTTSResponse;
+  const response = value as { audio?: unknown; timestamps?: SyncTTSResponse["timestamps"] };
   if (typeof response.audio !== "string") {
     throw new KovaTTSProtocolError("Sync TTS response is missing audio");
   }
   if (response.timestamps && !Array.isArray(response.timestamps.words)) {
     throw new KovaTTSProtocolError("Sync TTS response timestamps are invalid");
   }
-  return response;
-}
-
-export function decodeBase64ToBytes(value: string): Uint8Array {
-  if (typeof Buffer !== "undefined") {
-    return new Uint8Array(Buffer.from(value, "base64"));
-  }
-  const binary = atob(value);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
-}
-
-export function decodePcm16LeBase64(value: string): Int16Array {
-  const bytes = decodeBase64ToBytes(value);
-  if (bytes.byteLength % 2 !== 0) {
-    throw new KovaTTSProtocolError("PCM16 data must have an even byte length");
-  }
-  const copy = new Uint8Array(bytes.byteLength);
-  copy.set(bytes);
-  return new Int16Array(copy.buffer);
+  return {
+    audio: decodeBase64ToBytes(response.audio),
+    ...(response.timestamps ? { timestamps: response.timestamps } : {}),
+  };
 }
 
 async function toResponseError(response: Response): Promise<Error> {

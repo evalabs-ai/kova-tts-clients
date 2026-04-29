@@ -25,6 +25,9 @@ const result = await client.tts({
 await client.writeAudioFile(result.audio, "out.mp3");
 ```
 
+`result.audio` is decoded file bytes as a `Uint8Array`. Streaming and
+WebSocket audio events expose decoded PCM bytes on `event.audio` / `frame.audio`.
+
 The default endpoint is `https://api.evalabs.ai/v1/tts`. Override `baseUrl` only
 for staging or local servers.
 
