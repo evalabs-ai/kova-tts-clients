@@ -49,6 +49,7 @@ const result = await client.tts({
   voice: "leon",
   response_format: "mp3",
   timestamps: true,
+  normalize_text: true,
 });
 
 await client.writeAudioFile(result.audio, "out.mp3");
@@ -69,6 +70,7 @@ result = client.tts(
     voice="leon",
     response_format="mp3",
     timestamps=True,
+    normalize_text=True,
 )
 
 client.write_audio_file(result.audio, "out.mp3")
@@ -85,7 +87,7 @@ Direct curl smoke test:
 curl -X POST https://api.evalabs.ai/v1/tts \
   -H 'x-api-key: YOUR_API_KEY' \
   -H 'content-type: application/json' \
-  -d '{"text":"Hello world.","voice":"leon","response_format":"mp3","timestamps":true}'
+  -d '{"text":"Hello world.","voice":"leon","response_format":"mp3","timestamps":true,"normalize_text":true}'
 ```
 
 ## API Contract
@@ -109,6 +111,7 @@ type TTSRequest = {
   temperature?: number | null;
   response_format?: "mp3" | "wav" | "m4a";
   timestamps?: boolean;
+  normalize_text?: boolean;
 };
 ```
 
@@ -117,6 +120,7 @@ Defaults:
 - `temperature`: omitted means server internal default
 - `response_format`: `"mp3"`
 - `timestamps`: `false`
+- `normalize_text`: `false`
 
 The old `sampling_params` field is not part of the public HTTP API. Clients should not expose `top_p`, `top_k`, or `repetition_penalty`.
 
@@ -348,6 +352,7 @@ const result = await client.tts({
   voice: "leon",
   response_format: "mp3",
   timestamps: true,
+  normalize_text: true,
 });
 
 await client.writeAudioFile(result.audio, "out.mp3");
@@ -440,6 +445,7 @@ result = client.tts(
     voice="leon",
     response_format="mp3",
     timestamps=True,
+    normalize_text=True,
 )
 
 client.write_audio_file(result.audio, "out.mp3")
@@ -485,6 +491,7 @@ Implementation notes:
   - `decode_pcm16le_base64`
   - `write_audio_file`
 - Keep `temperature` as the only sampling option.
+- `normalize_text` is available on HTTP sync and streaming requests only.
 
 ## Error Handling
 
@@ -503,7 +510,7 @@ For WebSocket `ErrorFrame`, raise or emit a typed error depending on API style. 
 Minimum test coverage:
 
 - HTTP request serialization:
-  - includes `text`, `voice`, optional `temperature`, `response_format`, `timestamps`
+  - includes `text`, `voice`, optional `temperature`, `response_format`, `timestamps`, `normalize_text`
   - does not include `sampling_params`
 - Sync response parsing with and without timestamps
 - Stream parser:

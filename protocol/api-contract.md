@@ -19,6 +19,7 @@ type TTSRequest = {
   temperature?: number | null;
   response_format?: "mp3" | "wav" | "m4a";
   timestamps?: boolean;
+  normalize_text?: boolean;
 };
 ```
 

@@ -85,6 +85,7 @@ export function serializeTTSRequest(request: TTSRequest): Record<string, unknown
     ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
     ...(request.response_format !== undefined ? { response_format: request.response_format } : {}),
     ...(request.timestamps !== undefined ? { timestamps: request.timestamps } : {}),
+    ...(request.normalize_text !== undefined ? { normalize_text: request.normalize_text } : {}),
   };
 }
 

@@ -6,6 +6,7 @@ export type TTSRequest = {
   temperature?: number | null;
   response_format?: ResponseFormat;
   timestamps?: boolean;
+  normalize_text?: boolean;
 };
 
 export type TTSTimestamps = {

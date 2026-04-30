@@ -22,6 +22,7 @@ test("serializes HTTP requests without sampling params", () => {
     temperature: 0.7,
     response_format: "mp3",
     timestamps: true,
+    normalize_text: true,
   });
 
   assert.deepEqual(payload, {
@@ -30,6 +31,7 @@ test("serializes HTTP requests without sampling params", () => {
     temperature: 0.7,
     response_format: "mp3",
     timestamps: true,
+    normalize_text: true,
   });
   assert.equal("sampling_params" in payload, false);
 });

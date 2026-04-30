@@ -21,6 +21,7 @@ def test_serialize_tts_request_omits_sampling_params() -> None:
             temperature=0.7,
             response_format="mp3",
             timestamps=True,
+            normalize_text=True,
         )
     )
 
@@ -30,6 +31,7 @@ def test_serialize_tts_request_omits_sampling_params() -> None:
         "temperature": 0.7,
         "response_format": "mp3",
         "timestamps": True,
+        "normalize_text": True,
     }
     assert "sampling_params" not in payload
 

@@ -13,6 +13,7 @@ async def main() -> None:
         text="Hello world.",
         voice=os.environ.get("KOVA_TEST_VOICE", "leon"),
         timestamps=True,
+        normalize_text=True,
     ):
         if event.type == "audio":
             print(f"received {len(event.audio)} PCM bytes")

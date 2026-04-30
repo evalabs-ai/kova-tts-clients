@@ -20,6 +20,7 @@ const result = await client.tts({
   voice: "leon",
   response_format: "mp3",
   timestamps: true,
+  normalize_text: true,
 });
 
 await client.writeAudioFile(result.audio, "out.mp3");

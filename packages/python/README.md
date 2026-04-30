@@ -20,6 +20,7 @@ result = client.tts(
     voice="leon",
     response_format="mp3",
     timestamps=True,
+    normalize_text=True,
 )
 
 client.write_audio_file(result.audio, "out.mp3")

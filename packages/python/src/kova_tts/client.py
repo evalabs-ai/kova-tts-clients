@@ -34,6 +34,7 @@ class KovaTTSClient:
         temperature: float | None = None,
         response_format: ResponseFormat | None = None,
         timestamps: bool | None = None,
+        normalize_text: bool | None = None,
     ) -> SyncTTSResponse:
         try:
             import httpx
@@ -49,6 +50,7 @@ class KovaTTSClient:
                             temperature=temperature,
                             response_format=response_format,
                             timestamps=timestamps,
+                            normalize_text=normalize_text,
                         )
                     ),
                 )
@@ -69,6 +71,7 @@ class KovaTTSClient:
         temperature: float | None = None,
         response_format: ResponseFormat | None = None,
         timestamps: bool | None = None,
+        normalize_text: bool | None = None,
     ) -> AsyncIterator[StreamEvent]:
         try:
             import httpx
@@ -85,6 +88,7 @@ class KovaTTSClient:
                             temperature=temperature,
                             response_format=response_format,
                             timestamps=timestamps,
+                            normalize_text=normalize_text,
                         )
                     ),
                 ) as response:
@@ -142,6 +146,8 @@ def serialize_tts_request(request: TTSRequest) -> dict[str, Any]:
         payload["response_format"] = request.response_format
     if request.timestamps is not None:
         payload["timestamps"] = request.timestamps
+    if request.normalize_text is not None:
+        payload["normalize_text"] = request.normalize_text
     return payload
 
 

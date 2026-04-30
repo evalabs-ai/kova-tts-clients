@@ -13,6 +13,7 @@ class TTSRequest:
     temperature: float | None = None
     response_format: ResponseFormat | None = None
     timestamps: bool | None = None
+    normalize_text: bool | None = None
 
 
 @dataclass(slots=True)

@@ -11,6 +11,7 @@ result = client.tts(
     voice=os.environ.get("KOVA_TEST_VOICE", "leon"),
     response_format="mp3",
     timestamps=True,
+    normalize_text=True,
 )
 
 client.write_audio_file(result.audio, "out.mp3")
