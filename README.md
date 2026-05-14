@@ -28,6 +28,30 @@ The root `pyproject.toml` packages the Python client from
 `packages/python/src/kova_tts`. The root `package.json` builds and exposes the
 TypeScript client from `packages/js`.
 
+## Publishing to npm
+
+The npm package is published as `@kova-ai/tts`. To publish under that name, the
+npm account used for setup must own or have publish access to the `@kova-ai` scope.
+
+This repo uses npm Trusted Publishing from GitHub Actions. On npmjs.com, create
+or open the `@kova-ai/tts` package, then configure a trusted publisher:
+
+- Provider: GitHub Actions
+- Organization or user: `evalabs-ai`
+- Repository: `kova-tts-clients`
+- Workflow filename: `publish.yml`
+
+The workflow publishes when a `v*` tag is pushed, and can also be run manually
+from GitHub Actions:
+
+```sh
+npm version patch
+git push origin main --follow-tags
+```
+
+Scoped packages are public only when published with public access. The root
+`package.json` sets `publishConfig.access` to `public` for this.
+
 ## Local Examples
 
 Create a local `.env` file from the template:
@@ -72,7 +96,7 @@ TTS endpoint (`https://api.evalabs.ai/v1/tts`) as `baseUrl` / `base_url`.
 JavaScript:
 
 ```ts
-import { KovaTTSClient } from "@kova/tts";
+import { KovaTTSClient } from "@kova-ai/tts";
 
 const client = new KovaTTSClient({
   apiKey: "YOUR_API_KEY",
@@ -383,13 +407,13 @@ kova-tts-clients/
 
 Package names to consider:
 
-- npm package: `@kova/tts` if scoped publishing is available
+- npm package: `@kova-ai/tts` if scoped publishing is available
 - fallback npm package: `kova-tts`
 
 Primary API:
 
 ```ts
-import { KovaTTSClient } from "@kova/tts";
+import { KovaTTSClient } from "@kova-ai/tts";
 
 const client = new KovaTTSClient({
   apiKey: process.env.KOVA_API_KEY!,
@@ -423,7 +447,7 @@ for await (const event of client.streamTTS({
 Node.js WebSocket API:
 
 ```ts
-import { KovaTTSClient } from "@kova/tts";
+import { KovaTTSClient } from "@kova-ai/tts";
 
 const client = new KovaTTSClient({
   apiKey: process.env.KOVA_API_KEY!,

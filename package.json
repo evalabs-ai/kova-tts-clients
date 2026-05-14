@@ -1,10 +1,17 @@
 {
-  "name": "@kova/tts",
+  "name": "@kova-ai/tts",
   "version": "0.1.0",
   "description": "Official JavaScript/TypeScript client for the Kova TTS API.",
   "type": "module",
   "main": "./packages/js/dist/index.js",
   "types": "./packages/js/dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evalabs-ai/kova-tts-clients.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./packages/js/dist/index.d.ts",

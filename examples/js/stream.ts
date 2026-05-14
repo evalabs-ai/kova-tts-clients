@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { KovaTTSClient } from "@kova/tts";
+import { KovaTTSClient } from "@kova-ai/tts";
 
 const client = new KovaTTSClient({
   apiKey: process.env.KOVA_API_KEY!,

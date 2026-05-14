@@ -1,4 +1,4 @@
-# @kova/tts
+# @kova-ai/tts
 
 TypeScript client for the Kova TTS API.
 
@@ -9,7 +9,7 @@ npm install git+https://github.com/OWNER/kova-tts-clients.git
 ```
 
 ```ts
-import { KovaTTSClient } from "@kova/tts";
+import { KovaTTSClient } from "@kova-ai/tts";
 
 const client = new KovaTTSClient({
   apiKey: "YOUR_API_KEY",

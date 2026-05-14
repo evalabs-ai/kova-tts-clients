@@ -1,5 +1,5 @@
 {
-  "name": "@kova/tts",
+  "name": "@kova-ai/tts",
   "version": "0.1.0",
   "description": "Official JavaScript/TypeScript client for the Kova TTS API.",
   "type": "module",
