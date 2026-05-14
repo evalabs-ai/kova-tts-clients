@@ -5,6 +5,8 @@ import {
   decodeBase64ToBytes,
   decodePcm16LeBase64,
   KovaTTSClient,
+  isFlushCompleted,
+  pcm16ToWavBytes,
   parseSseRecord,
   parseSyncResponse,
   parseWebSocketFrame,
@@ -18,18 +20,26 @@ import {
 test("serializes HTTP requests without sampling params", () => {
   const payload = serializeTTSRequest({
     text: "Hello",
-    voice: "leon",
+    voice: "cal",
     temperature: 0.7,
-    response_format: "mp3",
+    response_format: {
+      encoding: "opus",
+      sample_rate: 48000,
+      bitrate: "64k",
+    },
     timestamps: true,
     normalize_text: true,
   });
 
   assert.deepEqual(payload, {
     text: "Hello",
-    voice: "leon",
+    voice: "cal",
     temperature: 0.7,
-    response_format: "mp3",
+    response_format: {
+      encoding: "opus",
+      sample_rate: 48000,
+      bitrate: "64k",
+    },
     timestamps: true,
     normalize_text: true,
   });
@@ -49,7 +59,7 @@ test("uses default base URL when none is provided", async () => {
     },
   });
 
-  await client.tts({ text: "Hello", voice: "leon" });
+  await client.tts({ text: "Hello", voice: "cal" });
 
   assert.equal(requestedUrl, "https://api.evalabs.ai/v1/tts");
 });
@@ -99,19 +109,39 @@ test("base64 helpers round trip PCM16", () => {
   assert.deepEqual([...decodePcm16LeBase64(encoded)], [-1, 0, 42]);
 });
 
+test("wraps PCM16 bytes in a WAV container", () => {
+  const pcm = Uint8Array.from([0, 0, 255, 255]);
+  const wav = pcm16ToWavBytes(pcm, { sampleRate: 32000 });
+  const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
+
+  assert.equal(Buffer.from(wav.slice(0, 4)).toString("ascii"), "RIFF");
+  assert.equal(view.getUint32(4, true), 40);
+  assert.equal(Buffer.from(wav.slice(8, 12)).toString("ascii"), "WAVE");
+  assert.equal(Buffer.from(wav.slice(12, 16)).toString("ascii"), "fmt ");
+  assert.equal(view.getUint16(20, true), 1);
+  assert.equal(view.getUint16(22, true), 1);
+  assert.equal(view.getUint32(24, true), 32000);
+  assert.equal(view.getUint16(34, true), 16);
+  assert.equal(Buffer.from(wav.slice(36, 40)).toString("ascii"), "data");
+  assert.equal(view.getUint32(40, true), pcm.byteLength);
+  assert.deepEqual([...wav.slice(44)], [...pcm]);
+});
+
 test("serializes websocket client frames", () => {
   assert.deepEqual(
     serializeStartContext({
       contextId: "ctx-1",
-      voiceId: "leon",
+      voiceId: "cal",
       modelId: "default",
       timestamps: true,
+      responseFormat: { encoding: "pcm", sample_rate: 32000 },
     }),
     {
       start_context: {
-        voice_id: "leon",
+        voice_id: "cal",
         model_id: "default",
         timestamps: true,
+        response_format: { encoding: "pcm", sample_rate: 32000 },
       },
       context_id: "ctx-1",
     },
@@ -133,28 +163,49 @@ test("serializes websocket client frames", () => {
 
 test("parses websocket server frames", () => {
   assert.equal(
-    "context_started" in
-      parseWebSocketFrame({
-        context_started: { voice_id: "leon", model_id: "default" },
-        context_id: "ctx-1",
-      }),
-    true,
+    parseWebSocketFrame({
+      context_started: { voice_id: "cal", model_id: "default" },
+      context_id: "ctx-1",
+    }).type,
+    "context_started",
+  );
+  assert.deepEqual(
+    parseWebSocketFrame({
+      context_started: {
+        voice_id: "cal",
+        model_id: "default",
+        response_format: { encoding: "pcm", sample_rate: 32000 },
+      },
+      context_id: "ctx-1",
+    }).context_started.response_format,
+    { encoding: "pcm", sample_rate: 32000 },
   );
   const audio = parseWebSocketFrame({ audio_chunk: "AAE=" });
+  assert.equal(audio.type, "audio");
   assert.equal("audio" in audio, true);
   assert.deepEqual([...audio.audio], [0, 1]);
   assert.equal("audio_chunk" in audio, false);
   assert.equal(
-    "timestamps" in
-      parseWebSocketFrame({
-        timestamps: { words: ["hello"], start_seconds: [0], end_seconds: [0.3] },
-      }),
-    true,
+    parseWebSocketFrame({
+      timestamps: { words: ["hello"], start_seconds: [0], end_seconds: [0.3] },
+    }).type,
+    "timestamps",
   );
-  assert.equal(
-    "flush_completed" in parseWebSocketFrame({ flush_completed: true, flush_id: "flush-1" }),
-    true,
-  );
-  assert.equal("context_closed" in parseWebSocketFrame({ context_closed: true }), true);
-  assert.equal("error" in parseWebSocketFrame({ error: "bad request" }), true);
+  const flushCompleted = parseWebSocketFrame({
+    flush_completed: true,
+    flush_id: "flush-1",
+    context_id: "ctx-1",
+    chunk_id: "ctx-1:chunk:0",
+  });
+  assert.equal(flushCompleted.type, "flush_completed");
+  assert.equal("flush_completed" in flushCompleted, true);
+  assert.equal(isFlushCompleted(flushCompleted), true);
+  if (isFlushCompleted(flushCompleted)) {
+    assert.equal(flushCompleted.flush_completed, true);
+    assert.equal(flushCompleted.flush_id, "flush-1");
+    assert.equal(flushCompleted.context_id, "ctx-1");
+    assert.equal(flushCompleted.chunk_id, "ctx-1:chunk:0");
+  }
+  assert.equal(parseWebSocketFrame({ context_closed: true }).type, "context_closed");
+  assert.equal(parseWebSocketFrame({ error: "bad request" }).type, "error");
 });

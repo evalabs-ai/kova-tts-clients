@@ -9,11 +9,13 @@ from .audio import decode_base64_bytes
 from .errors import KovaTTSConnectionError, KovaTTSProtocolError
 from .types import (
     AudioChunk,
+    AudioResponseFormat,
     ContextClosed,
     ContextConfig,
     ContextStarted,
     ErrorFrame,
     FlushCompleted,
+    ResponseFormat,
     Timestamps,
     TTSTimestamps,
     WebSocketFrame,
@@ -27,6 +29,7 @@ def serialize_start_context(
     context_id: str | None = None,
     temperature: float | None = None,
     timestamps: bool | None = None,
+    response_format: ResponseFormat | None = None,
 ) -> dict[str, Any]:
     config: dict[str, Any] = {
         "voice_id": voice_id,
@@ -36,6 +39,8 @@ def serialize_start_context(
         config["temperature"] = temperature
     if timestamps is not None:
         config["timestamps"] = timestamps
+    if response_format is not None:
+        config["response_format"] = _omit_none(asdict(response_format))
 
     frame: dict[str, Any] = {"start_context": config}
     if context_id is not None:
@@ -181,6 +186,7 @@ class KovaTTSWebSocket:
         context_id: str | None = None,
         temperature: float | None = None,
         timestamps: bool | None = None,
+        response_format: ResponseFormat | None = None,
     ) -> None:
         await self._send(
             serialize_start_context(
@@ -189,6 +195,7 @@ class KovaTTSWebSocket:
                 context_id=context_id,
                 temperature=temperature,
                 timestamps=timestamps,
+                response_format=response_format,
             )
         )
 
@@ -221,7 +228,24 @@ def _parse_context_config(value: dict[str, Any]) -> ContextConfig:
         model_id=value["model_id"],
         temperature=value.get("temperature"),
         timestamps=value.get("timestamps"),
+        response_format=_parse_response_format(value.get("response_format")),
     )
+
+
+def _parse_response_format(value: object) -> AudioResponseFormat | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise KovaTTSProtocolError("Invalid response format")
+    return AudioResponseFormat(
+        encoding=value.get("encoding", "mp3"),
+        sample_rate=value.get("sample_rate"),
+        bitrate=value.get("bitrate"),
+    )
+
+
+def _omit_none(value: dict[str, Any]) -> dict[str, Any]:
+    return {key: item for key, item in value.items() if item is not None}
 
 
 def _parse_timestamps(value: dict[str, Any]) -> TTSTimestamps:

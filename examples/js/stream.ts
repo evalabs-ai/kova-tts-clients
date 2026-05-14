@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { KovaTTSClient } from "@kova/tts";
 
 const client = new KovaTTSClient({
@@ -6,12 +8,15 @@ const client = new KovaTTSClient({
 
 for await (const event of client.streamTTS({
   text: "Hello world.",
-  voice: process.env.KOVA_TEST_VOICE ?? "leon",
+  voice: process.env.KOVA_TEST_VOICE ?? "cal",
   timestamps: true,
   normalize_text: true,
+  response_format: {
+    encoding: "pcm"
+  }
 })) {
   if (event.type === "audio") {
-    console.log(`received ${event.audio.byteLength} PCM bytes`);
+    console.log(`received ${event.audio.byteLength} audio bytes`);
   } else {
     console.log(event.words.join(" "));
   }

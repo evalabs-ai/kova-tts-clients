@@ -26,6 +26,7 @@ venv/
 env/
 
 # Local artifacts
+.env
 out.mp3
 *.wav
 *.m4a

@@ -5,6 +5,12 @@
   "type": "module",
   "main": "./packages/js/dist/index.js",
   "types": "./packages/js/dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./packages/js/dist/index.d.ts",
+      "import": "./packages/js/dist/index.js"
+    }
+  },
   "files": [
     "packages/js/dist",
     "packages/js/README.md",
@@ -13,6 +19,12 @@
   ],
   "scripts": {
     "build": "tsc -p packages/js/tsconfig.json",
+    "example:js:stream": "npm run build && tsx examples/js/stream.ts",
+    "example:js:sync": "npm run build && tsx examples/js/sync.ts",
+    "example:js:websocket": "npm run build && tsx examples/js/websocket.ts",
+    "example:py:stream": "PYTHONPATH=packages/python/src python3 examples/python/stream.py",
+    "example:py:sync": "PYTHONPATH=packages/python/src python3 examples/python/sync.py",
+    "example:py:websocket": "PYTHONPATH=packages/python/src python3 examples/python/websocket.py",
     "prepare": "npm run build",
     "test": "npm run build && node --test packages/js/test/*.test.mjs"
   },
@@ -22,6 +34,8 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/ws": "^8.5.12",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.22.0",
     "typescript": "^5.4.0"
   },
   "engines": {

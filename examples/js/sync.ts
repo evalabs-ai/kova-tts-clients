@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { KovaTTSClient } from "@kova/tts";
 
 const client = new KovaTTSClient({
@@ -6,8 +8,8 @@ const client = new KovaTTSClient({
 
 const result = await client.tts({
   text: "Hello world.",
-  voice: process.env.KOVA_TEST_VOICE ?? "leon",
-  response_format: "mp3",
+  voice: process.env.KOVA_TEST_VOICE ?? "cal",
+  response_format: { encoding: "mp3" },
   timestamps: true,
   normalize_text: true,
 });

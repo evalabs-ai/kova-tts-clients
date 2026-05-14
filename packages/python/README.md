@@ -9,7 +9,7 @@ pip install git+https://github.com/evalabs-ai/kova-tts-clients.git
 ```
 
 ```py
-from kova_tts import KovaTTSClient
+from kova_tts import AudioResponseFormat, KovaTTSClient
 
 client = KovaTTSClient(
     api_key="YOUR_API_KEY",
@@ -17,8 +17,8 @@ client = KovaTTSClient(
 
 result = client.tts(
     text="Hello world.",
-    voice="leon",
-    response_format="mp3",
+    voice="cal",
+    response_format=AudioResponseFormat(encoding="mp3"),
     timestamps=True,
     normalize_text=True,
 )
@@ -26,8 +26,9 @@ result = client.tts(
 client.write_audio_file(result.audio, "out.mp3")
 ```
 
-`result.audio` is decoded file bytes as `bytes`. Streaming and WebSocket audio
-events expose decoded PCM bytes on `event.audio` / `frame.audio`.
+`result.audio` is decoded file bytes as `bytes`. Streaming audio events expose
+decoded audio bytes on `event.audio`; WebSocket frames expose decoded PCM bytes
+on `frame.audio`.
 
 The default endpoint is `https://api.evalabs.ai/v1/tts`. Override `base_url`
 only for staging or local servers.

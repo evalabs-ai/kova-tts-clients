@@ -10,16 +10,20 @@ from kova_tts.client import (
     serialize_tts_request,
 )
 from kova_tts.errors import KovaTTSProtocolError
-from kova_tts.types import TTSRequest
+from kova_tts.types import AudioResponseFormat, TTSRequest
 
 
 def test_serialize_tts_request_omits_sampling_params() -> None:
     payload = serialize_tts_request(
         TTSRequest(
             text="Hello",
-            voice="leon",
+            voice="cal",
             temperature=0.7,
-            response_format="mp3",
+            response_format=AudioResponseFormat(
+                encoding="opus",
+                sample_rate=48000,
+                bitrate="64k",
+            ),
             timestamps=True,
             normalize_text=True,
         )
@@ -27,13 +31,29 @@ def test_serialize_tts_request_omits_sampling_params() -> None:
 
     assert payload == {
         "text": "Hello",
-        "voice": "leon",
+        "voice": "cal",
         "temperature": 0.7,
-        "response_format": "mp3",
+        "response_format": {
+            "encoding": "opus",
+            "sample_rate": 48000,
+            "bitrate": "64k",
+        },
         "timestamps": True,
         "normalize_text": True,
     }
     assert "sampling_params" not in payload
+
+
+def test_serialize_tts_request_omits_unset_response_format_fields() -> None:
+    payload = serialize_tts_request(
+        TTSRequest(
+            text="Hello",
+            voice="cal",
+            response_format=AudioResponseFormat(encoding="wav"),
+        )
+    )
+
+    assert payload["response_format"] == {"encoding": "wav"}
 
 
 def test_endpoint_url_accepts_origin_or_full_tts_path() -> None:

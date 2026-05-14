@@ -17,8 +17,8 @@ const client = new KovaTTSClient({
 
 const result = await client.tts({
   text: "Hello world.",
-  voice: "leon",
-  response_format: "mp3",
+  voice: "cal",
+  response_format: { encoding: "mp3" },
   timestamps: true,
   normalize_text: true,
 });
@@ -26,8 +26,15 @@ const result = await client.tts({
 await client.writeAudioFile(result.audio, "out.mp3");
 ```
 
-`result.audio` is decoded file bytes as a `Uint8Array`. Streaming and
-WebSocket audio events expose decoded PCM bytes on `event.audio` / `frame.audio`.
+`result.audio` is decoded file bytes as a `Uint8Array`. Streaming audio events
+expose decoded audio bytes on `event.audio`; WebSocket frames expose decoded PCM
+bytes on `frame.audio`.
+
+For WebSocket PCM output, write a WAV file with a header:
+
+```ts
+await client.writePcm16WavFile(pcmBytes, "out.wav", { sampleRate: 32000 });
+```
 
 The default endpoint is `https://api.evalabs.ai/v1/tts`. Override `baseUrl` only
 for staging or local servers.

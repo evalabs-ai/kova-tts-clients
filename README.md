@@ -28,6 +28,40 @@ The root `pyproject.toml` packages the Python client from
 `packages/python/src/kova_tts`. The root `package.json` builds and exposes the
 TypeScript client from `packages/js`.
 
+## Local Examples
+
+Create a local `.env` file from the template:
+
+```sh
+cp .env.example .env
+```
+
+Set at least `KOVA_API_KEY`. You can also set `KOVA_TEST_VOICE` and
+`KOVA_BASE_URL`.
+
+Install local JS tooling once:
+
+```sh
+npm install
+```
+
+Run the JavaScript examples against the local package build:
+
+```sh
+npm run example:js:sync
+npm run example:js:stream
+npm run example:js:websocket
+```
+
+Run the Python examples against the local source package:
+
+```sh
+python3 -m pip install -e .
+npm run example:py:sync
+npm run example:py:stream
+npm run example:py:websocket
+```
+
 ## Example Usage
 
 The clients default to `https://api.evalabs.ai/v1/tts`, so typical usage only
@@ -46,8 +80,8 @@ const client = new KovaTTSClient({
 
 const result = await client.tts({
   text: "Hello world.",
-  voice: "leon",
-  response_format: "mp3",
+  voice: "cal",
+  response_format: { encoding: "mp3" },
   timestamps: true,
   normalize_text: true,
 });
@@ -59,7 +93,7 @@ console.log(result.timestamps?.words);
 Python:
 
 ```py
-from kova_tts import KovaTTSClient
+from kova_tts import AudioResponseFormat, KovaTTSClient
 
 client = KovaTTSClient(
     api_key="YOUR_API_KEY",
@@ -67,8 +101,8 @@ client = KovaTTSClient(
 
 result = client.tts(
     text="Hello world.",
-    voice="leon",
-    response_format="mp3",
+    voice="cal",
+    response_format=AudioResponseFormat(encoding="mp3"),
     timestamps=True,
     normalize_text=True,
 )
@@ -78,8 +112,8 @@ print(result.timestamps.words if result.timestamps else None)
 ```
 
 Client responses decode audio before returning it. Sync `result.audio` is the
-decoded audio file bytes. Streaming and WebSocket audio frames expose `audio` as
-decoded PCM bytes.
+decoded audio file bytes. Streaming audio frames expose decoded audio bytes, and
+WebSocket audio frames expose decoded PCM bytes.
 
 Direct curl smoke test:
 
@@ -87,7 +121,7 @@ Direct curl smoke test:
 curl -X POST https://api.evalabs.ai/v1/tts \
   -H 'x-api-key: YOUR_API_KEY' \
   -H 'content-type: application/json' \
-  -d '{"text":"Hello world.","voice":"leon","response_format":"mp3","timestamps":true,"normalize_text":true}'
+  -d '{"text":"Hello world.","voice":"cal","response_format":{"encoding":"mp3"},"timestamps":true,"normalize_text":true}'
 ```
 
 ## API Contract
@@ -109,7 +143,11 @@ type TTSRequest = {
   text: string;
   voice: string;
   temperature?: number | null;
-  response_format?: "mp3" | "wav" | "m4a";
+  response_format?: {
+    encoding: "mp3" | "pcm" | "wav" | "linear16" | "opus" | "mulaw" | "alaw";
+    sample_rate?: number | null;
+    bitrate?: string | number | null;
+  };
   timestamps?: boolean;
   normalize_text?: boolean;
 };
@@ -118,7 +156,7 @@ type TTSRequest = {
 Defaults:
 
 - `temperature`: omitted means server internal default
-- `response_format`: `"mp3"`
+- `response_format`: `{ "encoding": "mp3" }`
 - `timestamps`: `false`
 - `normalize_text`: `false`
 
@@ -162,7 +200,7 @@ content-type: application/json
 Response is `text/plain` with SSE-style records:
 
 ```text
-data: {"type":"audio","audio_chunk":"<base64 pcm>"}
+data: {"type":"audio","audio_chunk":"<base64 audio>"}
 
 data: {"type":"timestamps","words":["hello"],"start_seconds":[0.0],"end_seconds":[0.3]}
 ```
@@ -185,7 +223,8 @@ type StreamTimestampsEvent = {
 type StreamEvent = StreamAudioEvent | StreamTimestampsEvent;
 ```
 
-`audio_chunk` is base64 little-endian int16 PCM at 32 kHz mono. Timestamp events are only emitted when `timestamps: true`.
+`audio_chunk` is base64 encoded audio bytes. The audio format follows
+`response_format`. Timestamp events are only emitted when `timestamps: true`.
 
 ### WebSocket TTS
 
@@ -207,6 +246,11 @@ type ContextConfig = {
   model_id: string;
   temperature?: number | null;
   timestamps?: boolean;
+  response_format?: {
+    encoding: "mp3" | "pcm" | "wav" | "linear16" | "opus" | "mulaw" | "alaw";
+    sample_rate?: number | null;
+    bitrate?: string | number | null;
+  };
 };
 
 type StartContext = {
@@ -277,6 +321,10 @@ type ErrorFrame = {
 ```
 
 WebSocket `audio_chunk` values are base64 little-endian int16 PCM at 32 kHz mono. Timestamp frames are only emitted for contexts started with `timestamps: true`.
+
+Client libraries normalize received WebSocket frames into a discriminated union
+with `type` values such as `"audio"`, `"timestamps"`, and
+`"flush_completed"`.
 
 WS sampling behavior:
 
@@ -349,8 +397,8 @@ const client = new KovaTTSClient({
 
 const result = await client.tts({
   text: "Hello world.",
-  voice: "leon",
-  response_format: "mp3",
+  voice: "cal",
+  response_format: { encoding: "mp3" },
   timestamps: true,
   normalize_text: true,
 });
@@ -363,11 +411,11 @@ Streaming API:
 ```ts
 for await (const event of client.streamTTS({
   text: "Hello world.",
-  voice: "leon",
+  voice: "cal",
   timestamps: true,
 })) {
   if (event.type === "audio") {
-    const pcmBytes = event.audio;
+    const audioBytes = event.audio;
   }
 }
 ```
@@ -382,12 +430,15 @@ const client = new KovaTTSClient({
 });
 
 const ws = await client.connectWebSocket();
+const pcmChunks: Uint8Array[] = [];
+const sampleRate = 32000;
 
 await ws.startContext({
   contextId: "ctx-1",
-  voiceId: "leon",
+  voiceId: "cal",
   modelId: "default",
   timestamps: true,
+  responseFormat: { encoding: "pcm", sample_rate: sampleRate },
 });
 
 await ws.sendText("ctx-1", "Hello ");
@@ -395,15 +446,30 @@ await ws.sendText("ctx-1", "world.");
 await ws.flush("ctx-1");
 
 for await (const frame of ws) {
-  if ("audio" in frame) {
-    // Decoded little-endian int16 PCM bytes at 32 kHz mono.
-    const pcmBytes = frame.audio;
-    console.log(`received ${pcmBytes.byteLength} PCM bytes`);
-  } else if ("timestamps" in frame) {
-    console.log(frame.timestamps.words);
-  } else if ("flush_completed" in frame) {
-    break;
+  switch (frame.type) {
+    case "audio":
+      pcmChunks.push(frame.audio);
+      console.log(`received ${frame.audio.byteLength} PCM bytes`);
+      break;
+    case "timestamps":
+      console.log(frame.timestamps.words);
+      break;
+    case "flush_completed":
+      ws.close();
+      break;
   }
+}
+
+await client.writePcm16WavFile(concatBytes(pcmChunks), "out.wav", { sampleRate });
+
+function concatBytes(chunks: Uint8Array[]): Uint8Array {
+  const output = new Uint8Array(chunks.reduce((total, chunk) => total + chunk.byteLength, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return output;
 }
 ```
 
@@ -422,6 +488,7 @@ Implementation notes:
   - `decodeBase64ToBytes`
   - `decodePcm16LeBase64`
   - `writeAudioFile` for sync output in Node
+  - `writePcm16WavFile` for WebSocket PCM output in Node
 - Validate known event/frame shapes enough to produce useful client errors.
 
 ## Python Client Goals
@@ -434,7 +501,7 @@ Package names:
 Primary API:
 
 ```py
-from kova_tts import KovaTTSClient
+from kova_tts import AudioResponseFormat, KovaTTSClient
 
 client = KovaTTSClient(
     api_key="...",
@@ -442,8 +509,8 @@ client = KovaTTSClient(
 
 result = client.tts(
     text="Hello world.",
-    voice="leon",
-    response_format="mp3",
+    voice="cal",
+    response_format=AudioResponseFormat(encoding="mp3"),
     timestamps=True,
     normalize_text=True,
 )
@@ -456,11 +523,11 @@ Async streaming API:
 ```py
 async for event in client.stream_tts(
     text="Hello world.",
-    voice="leon",
+    voice="cal",
     timestamps=True,
 ):
     if event.type == "audio":
-        pcm_bytes = event.audio
+        audio_bytes = event.audio
 ```
 
 WebSocket API:
@@ -469,9 +536,10 @@ WebSocket API:
 async with client.websocket() as ws:
     await ws.start_context(
         context_id="ctx-1",
-        voice_id="leon",
+        voice_id="cal",
         model_id="default",
         timestamps=True,
+        response_format=AudioResponseFormat(encoding="pcm", sample_rate=32000),
     )
     await ws.send_text("Hello ", context_id="ctx-1")
     await ws.send_text("world.", context_id="ctx-1")

@@ -1,4 +1,19 @@
-export type ResponseFormat = "mp3" | "wav" | "m4a";
+export type AudioEncoding =
+  | "mp3"
+  | "pcm"
+  | "wav"
+  | "linear16"
+  | "opus"
+  | "mulaw"
+  | "alaw";
+
+export type AudioResponseFormat = {
+  encoding: AudioEncoding;
+  sample_rate?: number | null;
+  bitrate?: string | number | null;
+};
+
+export type ResponseFormat = AudioResponseFormat;
 
 export type TTSRequest = {
   text: string;
@@ -23,7 +38,7 @@ export type SyncTTSResponse = {
 
 export type StreamAudioEvent = {
   type: "audio";
-  /** Decoded little-endian int16 PCM bytes at 32 kHz mono. */
+  /** Decoded audio bytes. Format follows the request response_format. */
   audio: Uint8Array;
 };
 
@@ -38,6 +53,7 @@ export type ContextConfig = {
   model_id: string;
   temperature?: number | null;
   timestamps?: boolean;
+  response_format?: ResponseFormat;
 };
 
 export type StartContext = {
@@ -65,11 +81,13 @@ export type CloseContext = {
 export type ClientWebSocketFrame = StartContext | SendText | Flush | CloseContext;
 
 export type ContextStarted = {
+  type: "context_started";
   context_started: ContextConfig;
   context_id?: string | null;
 };
 
 export type AudioChunk = {
+  type: "audio";
   /** Decoded little-endian int16 PCM bytes at 32 kHz mono. */
   audio: Uint8Array;
   context_id?: string | null;
@@ -77,12 +95,14 @@ export type AudioChunk = {
 };
 
 export type Timestamps = {
+  type: "timestamps";
   timestamps: TTSTimestamps;
   context_id?: string | null;
   chunk_id?: string | null;
 };
 
 export type FlushCompleted = {
+  type: "flush_completed";
   flush_completed: true;
   flush_id: string;
   context_id?: string | null;
@@ -90,11 +110,13 @@ export type FlushCompleted = {
 };
 
 export type ContextClosed = {
+  type: "context_closed";
   context_closed: true;
   context_id?: string | null;
 };
 
 export type ErrorFrame = {
+  type: "error";
   error: string;
   context_id?: string | null;
   flush_id?: string | null;

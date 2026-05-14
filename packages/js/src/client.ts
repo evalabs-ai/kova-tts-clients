@@ -3,7 +3,7 @@ import {
   KovaTTSProtocolError,
   errorForStatus,
 } from "./errors.js";
-import { decodeBase64ToBytes } from "./audio.js";
+import { decodeBase64ToBytes, pcm16ToWavBytes, type Pcm16WavOptions } from "./audio.js";
 import { parseEventStream } from "./stream.js";
 import type { StreamEvent, SyncTTSResponse, TTSRequest } from "./types.js";
 import { KovaTTSWebSocket } from "./websocket.js";
@@ -54,6 +54,10 @@ export class KovaTTSClient {
   async writeAudioFile(audio: Uint8Array, path: string): Promise<void> {
     const { writeFile } = await import("node:fs/promises");
     await writeFile(path, audio);
+  }
+
+  async writePcm16WavFile(pcm: Uint8Array, path: string, options: Pcm16WavOptions): Promise<void> {
+    await this.writeAudioFile(pcm16ToWavBytes(pcm, options), path);
   }
 
   private async postJson(path: string, request: TTSRequest): Promise<Response> {

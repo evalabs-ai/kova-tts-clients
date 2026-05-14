@@ -14,12 +14,15 @@ from .errors import (
     KovaTTSValidationError,
 )
 from .types import (
+    AudioEncoding,
     AudioChunk,
+    AudioResponseFormat,
     ContextClosed,
     ContextConfig,
     ContextStarted,
     ErrorFrame,
     FlushCompleted,
+    ResponseFormat,
     StreamAudioEvent,
     StreamEvent,
     StreamTimestampsEvent,
@@ -31,7 +34,9 @@ from .types import (
 )
 
 __all__ = [
+    "AudioEncoding",
     "AudioChunk",
+    "AudioResponseFormat",
     "ContextClosed",
     "ContextConfig",
     "ContextStarted",
@@ -46,6 +51,7 @@ __all__ = [
     "KovaTTSRateLimitError",
     "KovaTTSServerError",
     "KovaTTSValidationError",
+    "ResponseFormat",
     "StreamAudioEvent",
     "StreamEvent",
     "StreamTimestampsEvent",

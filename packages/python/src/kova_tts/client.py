@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse, urlunparse
@@ -143,12 +144,16 @@ def serialize_tts_request(request: TTSRequest) -> dict[str, Any]:
     if request.temperature is not None:
         payload["temperature"] = request.temperature
     if request.response_format is not None:
-        payload["response_format"] = request.response_format
+        payload["response_format"] = _omit_none(asdict(request.response_format))
     if request.timestamps is not None:
         payload["timestamps"] = request.timestamps
     if request.normalize_text is not None:
         payload["normalize_text"] = request.normalize_text
     return payload
+
+
+def _omit_none(value: dict[str, Any]) -> dict[str, Any]:
+    return {key: item for key, item in value.items() if item is not None}
 
 
 def _base_points_to_tts_endpoint(base_url: str) -> bool:

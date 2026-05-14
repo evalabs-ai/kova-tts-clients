@@ -2,9 +2,17 @@ import WebSocket from "ws";
 import { decodeBase64ToBytes } from "./audio.js";
 import { KovaTTSConnectionError, KovaTTSProtocolError } from "./errors.js";
 import type {
+  AudioChunk,
   ClientWebSocketFrame,
   ContextConfig,
+  ContextClosed,
+  ContextStarted,
+  ErrorFrame,
+  FlushCompleted,
+  ResponseFormat,
   ServerWebSocketFrame,
+  Timestamps,
+  TTSTimestamps,
 } from "./types.js";
 
 export type StartContextOptions = {
@@ -13,6 +21,7 @@ export type StartContextOptions = {
   modelId: string;
   temperature?: number | null;
   timestamps?: boolean;
+  responseFormat?: ResponseFormat;
 };
 
 export function serializeStartContext(options: StartContextOptions): ClientWebSocketFrame {
@@ -23,6 +32,7 @@ export function serializeStartContext(options: StartContextOptions): ClientWebSo
         model_id: options.modelId,
         ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
         ...(options.timestamps !== undefined ? { timestamps: options.timestamps } : {}),
+        ...(options.responseFormat !== undefined ? { response_format: options.responseFormat } : {}),
       },
     },
     options.contextId,
@@ -62,29 +72,79 @@ export function parseWebSocketFrame(value: unknown): ServerWebSocketFrame {
 
   const frame = value as Record<string, unknown>;
   if (typeof frame.error === "string") {
-    return frame as ServerWebSocketFrame;
+    return {
+      type: "error",
+      error: frame.error,
+      ...(optionalString(frame.context_id) !== undefined ? { context_id: optionalString(frame.context_id) } : {}),
+      ...(optionalString(frame.flush_id) !== undefined ? { flush_id: optionalString(frame.flush_id) } : {}),
+      ...(optionalString(frame.chunk_id) !== undefined ? { chunk_id: optionalString(frame.chunk_id) } : {}),
+    };
   }
   if (isContextConfig(frame.context_started)) {
-    return frame as ServerWebSocketFrame;
+    return {
+      type: "context_started",
+      context_started: frame.context_started,
+      ...(optionalString(frame.context_id) !== undefined ? { context_id: optionalString(frame.context_id) } : {}),
+    };
   }
   if (typeof frame.audio_chunk === "string") {
     return {
+      type: "audio",
       audio: decodeBase64ToBytes(frame.audio_chunk),
-      ...(frame.context_id !== undefined ? { context_id: frame.context_id } : {}),
-      ...(frame.chunk_id !== undefined ? { chunk_id: frame.chunk_id } : {}),
-    } as ServerWebSocketFrame;
+      ...(optionalString(frame.context_id) !== undefined ? { context_id: optionalString(frame.context_id) } : {}),
+      ...(optionalString(frame.chunk_id) !== undefined ? { chunk_id: optionalString(frame.chunk_id) } : {}),
+    };
   }
   if (frame.timestamps && typeof frame.timestamps === "object") {
-    return frame as ServerWebSocketFrame;
+    return {
+      type: "timestamps",
+      timestamps: frame.timestamps as TTSTimestamps,
+      ...(optionalString(frame.context_id) !== undefined ? { context_id: optionalString(frame.context_id) } : {}),
+      ...(optionalString(frame.chunk_id) !== undefined ? { chunk_id: optionalString(frame.chunk_id) } : {}),
+    };
   }
   if (frame.flush_completed === true && typeof frame.flush_id === "string") {
-    return frame as ServerWebSocketFrame;
+    return {
+      type: "flush_completed",
+      flush_completed: true,
+      flush_id: frame.flush_id,
+      ...(optionalString(frame.context_id) !== undefined ? { context_id: optionalString(frame.context_id) } : {}),
+      ...(optionalString(frame.chunk_id) !== undefined ? { chunk_id: optionalString(frame.chunk_id) } : {}),
+    };
   }
   if (frame.context_closed === true) {
-    return frame as ServerWebSocketFrame;
+    return {
+      type: "context_closed",
+      context_closed: true,
+      ...(optionalString(frame.context_id) !== undefined ? { context_id: optionalString(frame.context_id) } : {}),
+    };
   }
 
   throw new KovaTTSProtocolError(`Unknown WebSocket frame shape: ${JSON.stringify(value)}`);
+}
+
+export function isContextStarted(frame: ServerWebSocketFrame): frame is ContextStarted {
+  return frame.type === "context_started";
+}
+
+export function isAudioChunk(frame: ServerWebSocketFrame): frame is AudioChunk {
+  return frame.type === "audio";
+}
+
+export function isTimestamps(frame: ServerWebSocketFrame): frame is Timestamps {
+  return frame.type === "timestamps";
+}
+
+export function isFlushCompleted(frame: ServerWebSocketFrame): frame is FlushCompleted {
+  return frame.type === "flush_completed";
+}
+
+export function isContextClosed(frame: ServerWebSocketFrame): frame is ContextClosed {
+  return frame.type === "context_closed";
+}
+
+export function isErrorFrame(frame: ServerWebSocketFrame): frame is ErrorFrame {
+  return frame.type === "error";
 }
 
 export class KovaTTSWebSocket implements AsyncIterable<ServerWebSocketFrame> {
@@ -164,7 +224,7 @@ export class KovaTTSWebSocket implements AsyncIterable<ServerWebSocketFrame> {
     try {
       const raw = typeof data === "string" ? data : data.toString("utf8");
       const frame = parseWebSocketFrame(JSON.parse(raw));
-      if ("error" in frame) {
+      if (frame.type === "error") {
         throw new KovaTTSProtocolError(frame.error);
       }
       const waiter = this.waiters.shift();
@@ -211,4 +271,11 @@ function isContextConfig(value: unknown): value is ContextConfig {
     typeof (value as ContextConfig).voice_id === "string" &&
     typeof (value as ContextConfig).model_id === "string"
   );
+}
+
+function optionalString(value: unknown): string | null | undefined {
+  if (typeof value === "string" || value === null) {
+    return value;
+  }
+  return undefined;
 }

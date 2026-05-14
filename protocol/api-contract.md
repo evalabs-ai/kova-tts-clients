@@ -17,7 +17,11 @@ type TTSRequest = {
   text: string;
   voice: string;
   temperature?: number | null;
-  response_format?: "mp3" | "wav" | "m4a";
+  response_format?: {
+    encoding: "mp3" | "pcm" | "wav" | "linear16" | "opus" | "mulaw" | "alaw";
+    sample_rate?: number | null;
+    bitrate?: string | number | null;
+  };
   timestamps?: boolean;
   normalize_text?: boolean;
 };
@@ -54,7 +58,8 @@ type StreamEvent =
     };
 ```
 
-`audio_chunk` is base64 little-endian int16 PCM at 32 kHz mono.
+`audio_chunk` is base64 encoded audio bytes. The audio format follows
+`response_format`.
 
 ## WebSocket Frames
 
@@ -62,5 +67,8 @@ Client frames are discriminated by fields such as `start_context`,
 `send_text`, `flush`, and `close_context`. Server frames are discriminated by
 fields such as `context_started`, `audio_chunk`, `timestamps`,
 `flush_completed`, `context_closed`, and `error`.
+
+`start_context` accepts the same `response_format` object as HTTP requests.
+The server may echo that object in `context_started`.
 
 WebSocket audio chunks are base64 little-endian int16 PCM at 32 kHz mono.
