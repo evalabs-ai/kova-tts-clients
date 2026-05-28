@@ -10,7 +10,7 @@ load_dotenv()
 async def main() -> None:
     client = KovaTTSClient(
         api_key=os.environ["KOVA_API_KEY"],
-        base_url=os.environ.get("KOVA_BASE_URL", "https://api.evalabs.ai/v1/tts"),
+        base_url=os.environ.get("KOVA_BASE_URL", "https://api.kova.ai/v1/tts"),
     )
 
     async with client.websocket() as ws:

@@ -12,7 +12,7 @@ from .stream import parse_event_stream
 from .types import ResponseFormat, StreamEvent, SyncTTSResponse, TTSTimestamps, TTSRequest
 from .websocket import KovaTTSWebSocket
 
-DEFAULT_BASE_URL = "https://api.evalabs.ai/v1/tts"
+DEFAULT_BASE_URL = "https://api.kova.ai/v1/tts"
 
 
 class KovaTTSClient:

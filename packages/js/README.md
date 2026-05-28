@@ -9,21 +9,21 @@ npm install git+https://github.com/OWNER/kova-tts-clients.git
 ```
 
 ```ts
-import { KovaTTSClient } from "@kova-ai/tts";
+import { KovaTTSClient } from '@kova-ai/tts';
 
 const client = new KovaTTSClient({
-  apiKey: "YOUR_API_KEY",
+    apiKey: 'YOUR_API_KEY',
 });
 
 const result = await client.tts({
-  text: "Hello world.",
-  voice: "cal",
-  response_format: { encoding: "mp3" },
-  timestamps: true,
-  normalize_text: true,
+    text: 'Hello world.',
+    voice: 'cal',
+    response_format: { encoding: 'mp3' },
+    timestamps: true,
+    normalize_text: true,
 });
 
-await client.writeAudioFile(result.audio, "out.mp3");
+await client.writeAudioFile(result.audio, 'out.mp3');
 ```
 
 `result.audio` is decoded file bytes as a `Uint8Array`. Streaming audio events
@@ -33,10 +33,10 @@ bytes on `frame.audio`.
 For WebSocket PCM output, write a WAV file with a header:
 
 ```ts
-await client.writePcm16WavFile(pcmBytes, "out.wav", { sampleRate: 32000 });
+await client.writePcm16WavFile(pcmBytes, 'out.wav', { sampleRate: 32000 });
 ```
 
-The default endpoint is `https://api.evalabs.ai/v1/tts`. Override `baseUrl` only
+The default endpoint is `https://api.kova.ai/v1/tts`. Override `baseUrl` only
 for staging or local servers.
 
 Browser WebSocket connections cannot reliably send custom headers. The

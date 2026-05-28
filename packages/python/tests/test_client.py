@@ -60,18 +60,18 @@ def test_endpoint_url_accepts_origin_or_full_tts_path() -> None:
     from kova_tts import KovaTTSClient
 
     default_client = KovaTTSClient(api_key="dummy-api-key")
-    origin_client = KovaTTSClient(api_key="dummy-api-key", base_url="https://api.evalabs.ai")
+    origin_client = KovaTTSClient(api_key="dummy-api-key", base_url="https://api.kova.ai")
     full_path_client = KovaTTSClient(
         api_key="dummy-api-key",
-        base_url="https://api.evalabs.ai/v1/tts",
+        base_url="https://api.kova.ai/v1/tts",
     )
 
-    assert default_client._endpoint_url() == "https://api.evalabs.ai/v1/tts"
-    assert default_client._endpoint_url("stream") == "https://api.evalabs.ai/v1/tts/stream"
-    assert origin_client._endpoint_url() == "https://api.evalabs.ai/v1/tts"
-    assert origin_client._endpoint_url("stream") == "https://api.evalabs.ai/v1/tts/stream"
-    assert full_path_client._endpoint_url() == "https://api.evalabs.ai/v1/tts"
-    assert full_path_client._endpoint_url("stream") == "https://api.evalabs.ai/v1/tts/stream"
+    assert default_client._endpoint_url() == "https://api.kova.ai/v1/tts"
+    assert default_client._endpoint_url("stream") == "https://api.kova.ai/v1/tts/stream"
+    assert origin_client._endpoint_url() == "https://api.kova.ai/v1/tts"
+    assert origin_client._endpoint_url("stream") == "https://api.kova.ai/v1/tts/stream"
+    assert full_path_client._endpoint_url() == "https://api.kova.ai/v1/tts"
+    assert full_path_client._endpoint_url("stream") == "https://api.kova.ai/v1/tts/stream"
 
 
 def test_parse_sync_response_with_timestamps() -> None:
